@@ -317,8 +317,7 @@ The function returns either GPIO::IN(GPIO::Directions::IN) or GPIO::OUT(GPIO::Di
 See `samples/simple_pwm.cpp` for details on how to use PWM channels.
 
 The JetsonGPIO library supports PWM only on pins with attached hardware PWM
-controllers. Unlike the RPi.GPIO library, the JetsonGPIO library does not
-implement Software emulated PWM. Jetson Nano supports 2 PWM channels, and
+controllers. Jetson Nano supports 2 PWM channels, and
 Jetson AGX Xavier supports 3 PWM channels. Jetson TX1 and TX2 do not support
 any PWM channels.
 
@@ -327,3 +326,18 @@ to the relevant pins. If the pinmux is not configured, PWM signals will not
 reach the pins! The JetsonGPIO library does not dynamically modify the pinmux
 configuration to achieve this. Read the L4T documentation for details on how to
 configure the pinmux.
+
+#### 12. Software PWM  
+
+Software PWM is implemented as a porting of Raspberry PI SoftPWM. Original source code can be found at https://github.com/WiringPi/WiringPi.
+This is an example of usage:
+```cpp
+GPIO::SoftPWM softPwm(11, 0, 255);
+softPwm.start();
+for(uint16_t value = 0x00; value <= 0xFF; value++)
+{
+    softPwm.write(value);
+    usleep(100000);
+}
+softPwm.stop();
+```
