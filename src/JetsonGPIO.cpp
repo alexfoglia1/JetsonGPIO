@@ -887,6 +887,130 @@ void GPIO::PWM::stop()
     }
 }
 
+// SoftPWM class ==========================================================
+#define	PULSE_TIME	100
+#define	MAX_PINS	64
+
+static volatile int marks         [MAX_PINS] ;
+static volatile int range         [MAX_PINS] ;
+static volatile pthread_t threads [MAX_PINS] ;
+static volatile int newPin = -1 ;
+
+GPIO::SoftPWM::SoftPWM(int channel, int initial_value, int range)
+{
+    _channel = channel ;
+    _initial_value = initial_value ;
+    _range = range ;
+    _running = false ;
+}
+
+GPIO::SoftPWM::~SoftPWM()
+{
+    stop() ;
+}
+
+static void *softPwmThread (void *arg)
+{
+  int pin, mark, space ;
+  struct sched_param param ;
+
+  param.sched_priority = sched_get_priority_max (SCHED_RR) ;
+  pthread_setschedparam (pthread_self (), SCHED_RR, &param) ;
+
+  pin = *((int *)arg) ;
+  free (arg) ;
+
+  pin    = newPin ;
+  newPin = -1 ;
+
+
+  for (;;)
+  {
+    mark  = marks [pin] ;
+    space = range [pin] - mark ;
+
+    if (mark != 0)
+      GPIO::output (pin, GPIO::HIGH) ;
+    usleep (mark * 100) ;
+
+    if (space != 0)
+      GPIO::output (pin, GPIO::LOW) ;
+    usleep (space * 100) ;
+  }
+
+  return NULL ;
+}
+
+int GPIO::SoftPWM::start()
+{
+
+  int res ;
+  pthread_t myThread ;
+  int *passPin ;
+
+  if (_channel >= MAX_PINS)
+    return -1 ;
+
+  if (range [_channel] != 0)
+    return -1 ;
+
+  if (_range <= 0)
+    return -1 ;
+
+  passPin = (int*)malloc (sizeof (*passPin)) ;
+  if (passPin == NULL)
+    return -1 ;
+
+  GPIO::setup(_channel, GPIO::OUT) ;
+  GPIO::output(_channel, GPIO::HIGH) ;
+
+  marks [_channel] = _initial_value ;
+  range [_channel] = _range ;
+
+  *passPin = _channel ;
+  newPin   = _channel ;
+  res      = pthread_create (&myThread, NULL, softPwmThread, (void *)passPin) ;
+
+  if (res != 0)
+    return res ;
+  else
+    _running = true;
+
+  while (newPin != -1)
+    sleep (1) ;
+
+  threads [_channel] = myThread ;
+  
+  return res ;
+}
+
+void GPIO::SoftPWM::stop()
+{
+  if (_channel < MAX_PINS && _running)
+  {
+    if (range [_channel] != 0)
+    {
+      pthread_cancel (threads [_channel]) ;
+      pthread_join   (threads [_channel], NULL) ;
+      range [_channel] = 0 ;
+      GPIO::output (_channel, GPIO::LOW) ;
+      _running = false;
+    }
+  }
+}
+
+void GPIO::SoftPWM::write (int value)
+{
+  if (_channel < MAX_PINS && _running)
+  {
+    /**/ if (value < 0)
+      value = 0 ;
+    else if (value > range [_channel])
+      value = range [_channel] ;
+
+    marks [_channel] = value ;
+  }
+}      
 
 //=======================================
 // Callback
