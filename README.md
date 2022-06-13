@@ -410,6 +410,21 @@ configuration to achieve this. Read the L4T documentation for details on how to
 configure the pinmux.
 
 
+#### 12. Software PWM  
+
+Software PWM is implemented as a porting of Raspberry PI SoftPWM. Original source code can be found at https://github.com/WiringPi/WiringPi.
+This is an example of usage:
+```cpp
+GPIO::SoftPWM softPwm(11, 0, 255);
+softPwm.start();
+for(uint16_t value = 0x00; value <= 0xFF; value++)
+{
+    softPwm.write(value);
+    usleep(100000);
+}
+softPwm.stop();
+```
+
 # Using the library from a docker container
 The following describes how to use the JetsonGPIO library from a docker container. 
 

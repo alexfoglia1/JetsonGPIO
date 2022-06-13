@@ -434,6 +434,27 @@ namespace GPIO
         struct Impl;
         std::unique_ptr<Impl> pImpl;
     };
+
+
+    class SoftPWM
+    {
+    public:
+       SoftPWM(int channel, int initial_value, int range);
+       SoftPWM(const SoftPWM&) = delete;            // Can't create duplicate PWM objects
+       SoftPWM& operator=(const SoftPWM&) = delete; // Can't create duplicate PWM objects
+       ~SoftPWM();
+       int start();
+       void write(int value);
+       void stop();
+
+
+    private:
+      int _channel;
+      int _initial_value;
+      int _range;
+      bool _running;
+    };
+
 } // namespace GPIO
 
 #undef PUBLIC_ENUM_CLASS
