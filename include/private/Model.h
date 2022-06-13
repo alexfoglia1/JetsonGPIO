@@ -28,42 +28,34 @@ DEALINGS IN THE SOFTWARE.
 
 #include <string>
 
-// Jetson Models
-enum class Model
+namespace GPIO
 {
-    CLARA_AGX_XAVIER,
-    JETSON_NX,
-    JETSON_XAVIER,
-    JETSON_TX2,
-    JETSON_TX1,
-    JETSON_NANO
-};
+    // enum
+    enum class Model
+    {
+        CLARA_AGX_XAVIER,
+        JETSON_NX,
+        JETSON_XAVIER,
+        JETSON_TX2,
+        JETSON_TX1,
+        JETSON_NANO,
+        JETSON_TX2_NX,
+        JETSON_ORIN
+    };
 
-// alias
-constexpr Model CLARA_AGX_XAVIER = Model::CLARA_AGX_XAVIER;
-constexpr Model JETSON_NX = Model::JETSON_NX;
-constexpr Model JETSON_XAVIER = Model::JETSON_XAVIER;
-constexpr Model JETSON_TX2 = Model::JETSON_TX2;
-constexpr Model JETSON_TX1 = Model::JETSON_TX1;
-constexpr Model JETSON_NANO = Model::JETSON_NANO;
+    // names
+    constexpr const char* MODEL_NAMES[] = {"CLARA_AGX_XAVIER", "JETSON_NX",   "JETSON_XAVIER", "JETSON_TX2",
+                                           "JETSON_TX1",       "JETSON_NANO", "JETSON_TX2_NX", "JETSON_ORIN"};
 
-static std::string ModelToString(Model m)
-{
-    if(m == Model::CLARA_AGX_XAVIER)
-        return "CLARA_AGX_XAVIER";
-    else if(m == Model::JETSON_NX) 
-        return "JETSON_NX";
-    else if(m == Model::JETSON_XAVIER) 
-        return "JETSON_XAVIER";
-    else if(m == Model::JETSON_TX1) 
-        return "JETSON_TX1";
-    else if(m == Model::JETSON_TX2) 
-        return "JETSON_TX2";
-    else if(m == Model::JETSON_NANO) 
-        return "JETSON_NANO";
-    else
-        return "None";
-}
-
+    // alias
+    constexpr Model CLARA_AGX_XAVIER = Model::CLARA_AGX_XAVIER;
+    constexpr Model JETSON_NX = Model::JETSON_NX;
+    constexpr Model JETSON_XAVIER = Model::JETSON_XAVIER;
+    constexpr Model JETSON_TX2 = Model::JETSON_TX2;
+    constexpr Model JETSON_TX1 = Model::JETSON_TX1;
+    constexpr Model JETSON_NANO = Model::JETSON_NANO;
+    constexpr Model JETSON_TX2_NX = Model::JETSON_TX2_NX;
+    constexpr Model JETSON_ORIN = Model::JETSON_ORIN;
+} // namespace GPIO
 
 #endif

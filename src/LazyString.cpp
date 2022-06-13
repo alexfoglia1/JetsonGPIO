@@ -2,6 +2,7 @@
 Copyright (c) 2012-2017 Ben Croston ben@croston.org.
 Copyright (c) 2019, NVIDIA CORPORATION.
 Copyright (c) 2019 Jueon Park(pjueon) bluegbg@gmail.com.
+Copyright (c) 2021 Adam Rasburn blackforestcheesecake@protonmail.ch
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -22,51 +23,34 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
 
-#include <iostream>
-// for delay function.
-#include <chrono>
-#include <thread>
+#include "JetsonGPIO.h"
 
-// for signal handling
-#include <signal.h>
-
-#include <JetsonGPIO.h>
-
-using namespace std;
-
-static bool end_this_program = false;
-
-inline void delay(int s) { this_thread::sleep_for(chrono::seconds(s)); }
-
-void signalHandler(int s) { end_this_program = true; }
-
-int main()
+namespace GPIO
 {
-    // When CTRL+C pressed, signalHandler will be called
-    signal(SIGINT, signalHandler);
+    LazyString::LazyString(const std::function<std::string(void)>& func) : buffer(), is_cached(false), func(func) {}
 
-    // Pin Definitions
-    int output_pin = 18; // BOARD pin 12, BCM pin 18
+    LazyString::LazyString(const std::string& str) : buffer(str), is_cached(true), func() {}
 
-    // Pin Setup.
-    GPIO::setmode(GPIO::BCM);
-    // set pin as an output pin with optional initial state of HIGH
-    GPIO::setup(output_pin, GPIO::OUT, GPIO::HIGH);
+    LazyString::LazyString(const char* str) : buffer(str == nullptr ? "" : str), is_cached(true), func() {}
 
-    cout << "Strating demo now! Press CTRL+C to exit" << endl;
-    int curr_value = GPIO::HIGH;
+    LazyString::operator const char*() const { return this->operator()().c_str(); }
 
-    while (!end_this_program)
+    LazyString::operator std::string() const { return this->operator()(); }
+
+    const std::string& LazyString::operator()() const
     {
-        delay(1);
-        // Toggle the output every second
-        cout << "Outputting " << curr_value << " to pin ";
-        cout << output_pin << endl;
-        GPIO::output(output_pin, curr_value);
-        curr_value ^= GPIO::HIGH;
+        Evaluate();
+        return buffer;
     }
 
-    GPIO::cleanup();
+    void LazyString::Evaluate() const
+    {
+        if (is_cached)
+            return;
 
-    return 0;
-}
+        if (func != nullptr)
+            buffer = func();
+
+        is_cached = true;
+    }
+} // namespace GPIO

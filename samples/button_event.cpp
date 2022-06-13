@@ -23,6 +23,15 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
 
+/*
+EXAMPLE SETUP
+Connect a button to pin 18 and GND, a pull-up resistor connecting the button
+to 3V3 and an LED connected to pin 12. The application performs the same
+function as the button_led.py but performs a blocking wait for the button
+press event instead of continuously checking the value of the pin in order to
+reduce CPU usage.
+*/
+
 #include <signal.h>
 
 #include <chrono>
@@ -45,19 +54,20 @@ int main()
     signal(SIGINT, signalHandler);
 
     // Pin Definitions
-    int led_pin = 7;  // BOARD pin 7
-    int but_pin = 11; // BOARD pin 11
+    int led_pin = 12; // BOARD pin 12
+    int but_pin = 18; // BOARD pin 18
 
     // Pin Setup.
     GPIO::setmode(GPIO::BOARD);
 
-    // set pin as an output pin with optional initial state of HIGH
+    // set pin as an output pin with optional initial state of LOW
     GPIO::setup(led_pin, GPIO::OUT, GPIO::LOW);
     GPIO::setup(but_pin, GPIO::IN);
 
     cout << "Starting demo now! Press CTRL+C to exit" << endl;
 
-    while (!end_this_program) {
+    while (!end_this_program)
+    {
         cout << "Waiting for button event" << endl;
         GPIO::wait_for_edge(but_pin, GPIO::Edge::FALLING);
 

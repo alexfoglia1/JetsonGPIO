@@ -1,4 +1,6 @@
+
 /*
+Copyright (c) 2012-2017 Ben Croston ben@croston.org.
 Copyright (c) 2019, NVIDIA CORPORATION.
 Copyright (c) 2019 Jueon Park(pjueon) bluegbg@gmail.com.
 Copyright (c) 2021 Adam Rasburn blackforestcheesecake@protonmail.ch
@@ -23,48 +25,16 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #pragma once
-#ifndef GPIO_EVENT
-#define GPIO_EVENT
-
-#include <map>
-
-#include "JetsonGPIO.h"
+#ifndef _MACRO_SYSFS_ROOT
+#define _MACRO_SYSFS_ROOT "/sys/class/gpio"
 
 namespace GPIO
 {
-enum class EventResultCode {
-    SysFD_EdgeOpen = -100,
-    UnallowedEdgeNone = -101,
-    IllegalEdgeArgument = -102,
-    SysFD_EdgeWrite = -103,
-    SysFD_ValueOpen = -104,
-    SysFD_ValueNonBlocking = -105,
-    ChannelAlreadyBlocked = -106,
-    ConflictingEdgeType = -107,
-    ConflictingBounceTime = -108,
-    InternalTrackingError = -109,
-    EpollFD_CreateError = -110,
-    EpollCTL_Add = -111,
-    EpollWait = -112,
-    GPIO_Event_Not_Found = -113,
-    None = 0,
-    EdgeDetected = 1,
-};
+    constexpr auto _SYSFS_ROOT = _MACRO_SYSFS_ROOT;
+    constexpr auto _export_dir() { return _MACRO_SYSFS_ROOT "/export"; }
+    constexpr auto _unexport_dir() { return _MACRO_SYSFS_ROOT "/unexport"; }
 
-extern std::map<EventResultCode, const char*> event_error_code_to_message;
-
-int _blocking_wait_for_edge(int gpio, int channel_id, Edge edge, uint64_t bounce_time, uint64_t timeout);
-
-bool _edge_event_detected(int gpio);
-bool _edge_event_exists(int gpio);
-
-int _add_edge_detect(int gpio, int channel_id, Edge edge, uint64_t bounce_time);
-void _remove_edge_detect(int gpio);
-
-int _add_edge_callback(int gpio, const Callback& callback);
-void _remove_edge_callback(int gpio, const Callback& callback);
-
-void _event_cleanup(int gpio);
 } // namespace GPIO
 
-#endif /* GPIO_EVENT */
+#undef _MACRO_SYSFS_ROOT
+#endif

@@ -2,6 +2,7 @@
 Copyright (c) 2012-2017 Ben Croston ben@croston.org.
 Copyright (c) 2019, NVIDIA CORPORATION.
 Copyright (c) 2019 Jueon Park(pjueon) bluegbg@gmail.com.
+Copyright (c) 2021 Adam Rasburn blackforestcheesecake@protonmail.ch
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -22,51 +23,60 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
 
+#include "private/PythonFunctions.h"
+#include "private/TestUtility.h"
 #include <iostream>
-// for delay function.
-#include <chrono>
-#include <thread>
 
-// for signal handling
-#include <signal.h>
+using namespace std::string_literals;
 
-#include <JetsonGPIO.h>
+namespace
+{
+    struct LowerTestCase
+    {
+        std::string input;
+        std::string expected;
 
-using namespace std;
+        void run()
+        {
+            auto actual = GPIO::lower(input);
+            assert::are_equal(expected, actual);
+        }
 
-static bool end_this_program = false;
-
-inline void delay(int s) { this_thread::sleep_for(chrono::seconds(s)); }
-
-void signalHandler(int s) { end_this_program = true; }
+        TestFunction function(const std::string& name)
+        {
+            return {name, [this]() { run(); }};
+        }
+    };
+} // namespace
 
 int main()
 {
-    // When CTRL+C pressed, signalHandler will be called
-    signal(SIGINT, signalHandler);
+    TestSuit suit{};
 
-    // Pin Definitions
-    int output_pin = 18; // BOARD pin 12, BCM pin 18
+    std::vector<LowerTestCase> cases = {
+        {""s, ""s},
+        {"abcd efg 012_xyz 987"s, "abcd efg 012_xyz 987"s},
+        {"aBcd eFG 012_XYZ 987"s, "abcd efg 012_xyz 987"s},
+        {"    "s, "    "s},
+        {"UPPER CASE!!"s, "upper case!!"s},
+        {"This Is a Test..."s, "this is a test..."s},
+    };
 
-    // Pin Setup.
-    GPIO::setmode(GPIO::BCM);
-    // set pin as an output pin with optional initial state of HIGH
-    GPIO::setup(output_pin, GPIO::OUT, GPIO::HIGH);
-
-    cout << "Strating demo now! Press CTRL+C to exit" << endl;
-    int curr_value = GPIO::HIGH;
-
-    while (!end_this_program)
+    for (size_t i = 0; i < cases.size(); i++)
     {
-        delay(1);
-        // Toggle the output every second
-        cout << "Outputting " << curr_value << " to pin ";
-        cout << output_pin << endl;
-        GPIO::output(output_pin, curr_value);
-        curr_value ^= GPIO::HIGH;
+        auto name = GPIO::format("case_%02d", i);
+        suit.add(cases[i].function(name));
     }
 
-    GPIO::cleanup();
+    try
+    {
+        suit.run();
+    }
+    catch (std::exception& e)
+    {
+        std::cerr << e.what() << std::endl;
+        return -1;
+    }
 
     return 0;
 }
