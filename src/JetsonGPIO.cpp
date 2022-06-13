@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <utility>
 #include <vector>
+#include <unistd.h>
 
 #include "JetsonGPIO.h"
 #include "private/ExceptionHandling.h"
